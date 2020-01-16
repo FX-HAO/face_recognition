@@ -154,16 +154,17 @@ def show_webcam(mirror=False):
         face_pixels, box = extract_face(detector, img)
         if face_pixels is None:
             print("no face found in the screen")
-            draw_boxes(img, [], [], [])
-            continue
-        embeddings = get_embedding(facenet, face_pixels)
-        name, distance = embeddings_recognition(embeddings)
+            boxes, names, distances = [], [], []
+        else:
+            embeddings = get_embedding(facenet, face_pixels)
+            name, distance = embeddings_recognition(embeddings)
+            boxes, names, distances = [box], [name], [distance]
 
         end = datetime.datetime.now()
         delta = end - start
         print("%d ms elapsed" % (int(delta.total_seconds() * 1000)))
 
-        draw_boxes(img, [box], [name], [distance])
+        draw_boxes(img, boxes, names, distances)
 
 
 if __name__ == '__main__':
