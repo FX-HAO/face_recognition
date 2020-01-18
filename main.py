@@ -4,15 +4,8 @@ from extract_face import extract_face
 from face_embedding import get_embedding
 from keras.models import load_model
 from mtcnn.mtcnn import MTCNN
-from numpy import expand_dims
-from keras.models import load_model
 from keras.preprocessing.image import load_img
-from keras.preprocessing.image import img_to_array
 import numpy as np
-from numpy import expand_dims
-from keras.models import load_model
-from keras.preprocessing.image import load_img
-from keras.preprocessing.image import img_to_array
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
 import datetime
@@ -22,7 +15,7 @@ import cv2
 
 detector = MTCNN()
 facenet = load_model('facenet_keras.h5')
-tolerance = 6
+tolerance = 7
 
 def get_embedding_from_image(image):
     face_pixels, box = extract_face(detector, image)
@@ -70,7 +63,7 @@ def embeddings_recognition(embeddings):
     for name, embeddings_list in known_people_embeddings.items():
         for i in range(len(embeddings_list)):
             distance = face_distance(embeddings_list[i], embeddings)
-            print("distance to %s: %d" % (name, distance))
+            print("distance to %s: %f" % (name, distance))
             if distance < min_distance:
                 min_distance, min_name = distance, name
     if min_distance <= tolerance:
@@ -130,16 +123,25 @@ def collect_frames(q):
 
 def show_webcam(mirror=False):
     import multiprocessing as mp
-    mp.set_start_method('spawn') # NOTE: this is important to make opencv compatible multi-process
+    mp.set_start_method('spawn') # NOTE: this is important to make opencv compatible with multi-process
 
     q = Queue(maxsize=1)
     webcam_proc = Process(target=collect_frames, args=(q, ))
     webcam_proc.start()
 
+    def exit_handler(sigNum, frame):
+        webcam_proc.terminate()
+        exit(0)
+
+    import signal
+    signal.signal(signal.SIGINT, exit_handler)
+    signal.signal(signal.SIGQUIT, exit_handler)
+
     # cam = cv2.VideoCapture(0)
     # fps = cam.get(cv2.CAP_PROP_FPS)
     while True:
         img = q.get()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         # ret_val, img = None, None
         # for _ in range(0, 10):
@@ -147,7 +149,6 @@ def show_webcam(mirror=False):
         # ret_val, img = cam.read()
         if mirror:
             img = cv2.flip(img, 1)
-        print(img.shape)
 
         start = datetime.datetime.now()
 
