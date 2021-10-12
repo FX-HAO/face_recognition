@@ -1,6 +1,6 @@
 keras==2.3.0
 tensorflow==1.14.0
-opencv-python==4.1.2.30
+opencv-python==4.2.0.32
 pillow
 matplotlib
 numpy
